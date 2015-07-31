@@ -119,35 +119,70 @@ if (isset($_POST['submit'])) {
         var options = {
             chart: {
                 renderTo: 'container',
-                type: 'scatter'
+                type: 'scatter',
+                zoomType: 'xy'
             },
+            yAxis: {
+                min: 0,
+                max: 1500
+            },
+//            },legend: {
+//                layout: 'vertical',
+//                align: 'left',
+//                verticalAlign: 'top',
+//                x: 100,
+//                y: 70,
+//                floating: true,
+//                backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF',
+//                borderWidth: 1
+//            },
             series: [{}]
         };
         var url = "jsonp.php?callback=?&name=../<?php echo $target_file ?>";
         console.log(url);
         $.getJSON(url, function (data) {
-            console.log(data);
             //data.sort();
             //var i = 0;
-            for (var label in data){
-                console.log(options.series);
-                console.log(label);
+            //options.series[0].data = data;
+            points = data['allpoints'];
+            console.log(points)
+//            options.series[0].name = "Bloop";
+//            options.series[0].data = data['categories'];
 
+            //console.log(options.series[0].data)
+            options.series[0] = { 'data' : []};
+            total = Object.keys(points).length-1;
+            for (var label in points){
+                //console.log(points[label]);
+
+//              {"name":"2015WW03","x":1,"y":77.98,"drilldown1":"DE53028.3N","WfrCnt":1},{"
                 temp = {
                     name: label,
-                    data:data[label]
+                    color: 'rgba(223, 83, 83, .5)',
+                    data: []
                 }
 
-                //options.series[i].
-
-                //TODO: not this
+                for(point in points[label]){
+//                    console.log(points[label][point]);
+                    temp.data.push([
+                        total,
+                        parseFloat(points[label][point])
+                    ])
+//                        ,
+//                        "drilldown1":"DE53028.3N",
+//                        "WfrCnt":1
+                }
                 options.series.push(temp);
+
+                total--;
+
                 //i++;
             }
 
 
             //options.series[0].data = data["numbers"];
             var chart = new Highcharts.Chart(options);
+            console.log(chart);
         });
         document.getElementById("container").style.display = "block";
     }

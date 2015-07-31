@@ -9,6 +9,7 @@ import json
 def parse(filename):
     data = open(filename, "r")
 
+    alllabels = []
     obj = {}
 
     #TODO: 1.Read first line for headers
@@ -23,18 +24,17 @@ def parse(filename):
     for line in data:
         line = line.split("\t") #line is now an array of values
         #TODO: 3.Save x and y data
+        if line[label] not in alllabels:
+            alllabels.append(line[label])
 
         # check that line[points] is a real data point
-        
+        obj.setdefault(line[label], []).append(line[points])
 
         # if label has not been seen before, create label:[] relationship
         # else, append data points to label
-        if label not in obj:
-            obj[line[label]] = [line[points]]
-        else:
-            obj[line[label]].append(line[points])
+        #obj.append((line[label], line[points]))
 
-    return obj
+    return {'allpoints': obj, 'categories': alllabels}
 
 
 def get():
