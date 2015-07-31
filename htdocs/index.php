@@ -81,19 +81,13 @@
 
         <h2>Options</h2>
 
-        <form>
 
-            <input type="radio" name="script" value="script1">py1
-            <input type="radio" name="script" value="script2">py2
-            <input type="radio" name="script" value="script3">py3
-            <input type="radio" name="script" value="script4">py4
-        </form>
-        <form>
-            <input type="checkbox" name="script" value="script1">py1
-            <input type="checkbox" name="script" value="script2">py2
-            <input type="checkbox" name="script" value="script3">py3
-            <input type="checkbox" name="script" value="script4">py4
-        </form>
+            <select id="selectWafer">
+                <option selected="selected">All Wafers</option>
+                <option selected="selected">Show none</option>
+            </select>
+
+
     </div>
 </div>
 
@@ -114,81 +108,96 @@ if (isset($_POST['submit'])) {
         $toReturn .= "<br>executing python: ";
         $toReturn .= $name;
         ?>
+
         <script>
             var renderChart = function () {
-        var options = {
-            chart: {
-                renderTo: 'container',
-                type: 'scatter',
-                zoomType: 'xy'
-            },
-            yAxis: {
-                min: 0,
-                max: 1500
-            },
-//            },legend: {
-//                layout: 'vertical',
-//                align: 'left',
-//                verticalAlign: 'top',
-//                x: 100,
-//                y: 70,
-//                floating: true,
-//                backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF',
-//                borderWidth: 1
-//            },
-            series: [{}]
-        };
-        var url = "jsonp.php?callback=?&name=../<?php echo $target_file ?>";
-        console.log(url);
-        $.getJSON(url, function (data) {
-            //data.sort();
-            //var i = 0;
-            //options.series[0].data = data;
-            points = data['allpoints'];
-            console.log(points)
-//            options.series[0].name = "Bloop";
-//            options.series[0].data = data['categories'];
+                var chart;
+                var options = {
+                    chart: {
+                        renderTo: 'container',
+                        type: 'scatter',
+                        zoomType: 'xy'
+                    },
+                    yAxis: {
+                        min: 0,
+                        max: 1500
+                    },
+                    series: [{}]
+                };
+                var url = "jsonp.php?callback=?&name=../<?php echo $target_file ?>";
+                console.log(url);
+                $.getJSON(url, function (data) {
 
-            //console.log(options.series[0].data)
-            options.series[0] = { 'data' : []};
-            total = Object.keys(points).length-1;
-            for (var label in points){
-                //console.log(points[label]);
+                    //TODO dynamically make dropdown
+                    var select = document.getElementById("selectWafer");
+                    var cats = data.categories;
+                    for (var i = 0; i < cats.length; i++) {
+                        var opt = cats[i];
+                        //console.log(opt)
+                        var el = document.createElement("option");
+                        el.textContent = opt;
+                        el.val = opt;
+                        select.appendChild(el);
+                    }
 
-//              {"name":"2015WW03","x":1,"y":77.98,"drilldown1":"DE53028.3N","WfrCnt":1},{"
-                temp = {
-                    name: label,
-                    color: 'rgba(223, 83, 83, .5)',
-                    data: []
+                    points = data['allpoints'];
+                    console.log(points);
+
+                    options.series[0] = {'data': []};
+                    total = Object.keys(points).length - 1;
+                    for (var label in points) {
+
+                        temp = {
+                            name: label,
+                            //color: 'rgba(223, 83, 83, .5)',
+                            data: []
+                        }
+
+                        for (point in points[label]) {
+                            temp.data.push([
+                                total,
+                                parseFloat(points[label][point])
+                            ])
+                        }
+                        options.series.push(temp);
+
+                        total--;
+                    }
+
+                    chart = new Highcharts.Chart(options);
+                });
+                document.getElementById("container").style.display = "block";
+            };
+
+            $("#selectWafer").change(function () {
+                //console.log($(this).val())//.options[$(this).selectedIndex].text);
+                var selVal  = $(this).val();
+                //TODO update highchart to only show selected value
+                var chart=$("#container").highcharts();
+
+                for(i=0; i < chart.series.length; i++) {
+                    //if(chart.series[i].selected == true ){ //&& chart.series[i].name !== $(this).val()
+//                        chart.series[i].select();
+//                        showSeries.call(chart.series[i], {checked: false});
+                    //}
+                    if (selVal == "All Wafers")
+                        chart.series[i].show();
+                    else if(chart.series[i].name == selVal)
+                        chart.series[i].show();
+                    else if (selVal == "Show none")
+                        chart.series[i].hide();
+                    else chart.series[i].hide();
                 }
 
-                for(point in points[label]){
-//                    console.log(points[label][point]);
-                    temp.data.push([
-                        total,
-                        parseFloat(points[label][point])
-                    ])
-//                        ,
-//                        "drilldown1":"DE53028.3N",
-//                        "WfrCnt":1
-                }
-                options.series.push(temp);
 
-                total--;
+            });
 
-                //i++;
-            }
-
-
-            //options.series[0].data = data["numbers"];
-            var chart = new Highcharts.Chart(options);
-            console.log(chart);
-        });
-        document.getElementById("container").style.display = "block";
-    }
         </script>
         <?php
+
+
         echo '<script>renderChart()</script>';
+
         echo $toReturn;
 // echo "</div></div>";
     } else {
